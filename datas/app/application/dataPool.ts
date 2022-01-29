@@ -4,7 +4,7 @@ import { RequestKey } from 'datas/requests/domain/constants'
 import { useEffect, useMemo } from 'react'
 import { createPromise } from 'utils/promise'
 
-const fetchData = (props: {}) => {
+export const fetchData = (props: {}) => {
   const { promise, reslove } = createPromise<boolean>()
 
   setTimeout(() => {
