@@ -12,3 +12,13 @@ export function createPromise<T = void, J = any>() {
     reject,
   }
 }
+
+export const fetchData = (props: {}) => {
+  const { promise, reslove } = createPromise<boolean>()
+
+  setTimeout(() => {
+    reslove(!!Math.round(Math.random()))
+  }, 1000)
+
+  return promise
+}

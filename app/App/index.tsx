@@ -1,13 +1,7 @@
 import { createContext } from 'utils/createContext'
 
-import { useControllers } from './controllers'
-
 export function useAppService() {
-  const controllers = useControllers()
-
-  return {
-    controllers,
-  }
+  return {}
 }
 
 export const { Context, Provider: APP, createUseContext } = createContext(useAppService)
