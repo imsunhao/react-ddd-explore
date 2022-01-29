@@ -40,15 +40,9 @@ type GetRequesetId = (key: RequestKey) => RequestID
 type RequestGettersAttr = 'data' | 'loading' | 'polling'
 type PickRequestGetters<T extends Record<RequestGettersAttr, any>> = Pick<T, RequestGettersAttr>
 
-import type { UseReservesDataController } from 'datas/contract/application/reservesData'
-import type { UseUserReservesDataController } from 'datas/contract/application/userReservesData'
-import type { UseWalletBalanceController } from 'datas/contract/application/walletData'
+import type { UseDataPoolController } from 'datas/app/application/dataPool'
 type RequestGettersMap = {
-  [RequestKey.reservesData]: PickRequestGetters<UseReservesDataController>
-  [RequestKey.userReservesData]: PickRequestGetters<UseUserReservesDataController>
-  [RequestKey.walletBalanceData]: PickRequestGetters<UseWalletBalanceController>
-  [RequestKey.walletNFTData]: PickRequestGetters<UseWalletBalanceController>
-  [RequestKey.NFTInfoData]: PickRequestGetters<UseWalletBalanceController>
+  [RequestKey.dataPool]: PickRequestGetters<UseDataPoolController>
 }
 
 export type RequestGetters = <Key extends RequestKey>(key: Key, getRequesetId?: GetRequesetId) => RequestGettersMap[Key]

@@ -2,6 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   webpack: (config, context) => {
+    const { dev, isServer, webpack } = context
     config.plugins.push(
       new webpack.DefinePlugin({
         __SERVER__: isServer,
