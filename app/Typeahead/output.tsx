@@ -1,10 +1,18 @@
 import { useWhyDidYouUpdate } from 'ahooks'
-import { FC, memo } from 'react'
+import { useDatas } from 'datas'
+import { useObservableState } from 'observable-hooks'
+import { FC } from 'react'
 
-const Output: FC<{ value: any }> = (props) => {
+const Output: FC = () => {
+  const { status$ } = useDatas()
+  const props: any = useObservableState(status$, {
+    loading: false,
+  })
+
+  console.log('Output 页面刷新')
   useWhyDidYouUpdate('Output', props)
-  console.log('页面重新刷新')
-  return <div>{JSON.stringify(props.value)}</div>
+
+  return <div>{JSON.stringify(props)}</div>
 }
 
-export default memo(Output)
+export default Output

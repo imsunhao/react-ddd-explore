@@ -8,6 +8,7 @@ export const CustomInput: React.FC = () => {
     pluckCurrentTargetValue
   )
 
+  console.log('Input 页面刷新')
   useSubscription(textChange$, updateText)
 
   return <input className="input" type="text" placeholder="Text input" value={text} onChange={onChange} />
