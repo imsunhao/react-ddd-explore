@@ -14,6 +14,7 @@ export function createPromise<T = void, J = any>() {
 }
 
 export const fetchData = (props: {}) => {
+  console.log('fetchData [req]')
   const { promise, reslove } = createPromise<boolean>()
 
   setTimeout(() => {

@@ -2,9 +2,9 @@ import { createContext } from 'utils/createContext'
 import { useDataPoolController } from '../application/dataPoolController'
 
 const useRequestsService = () => {
-  const dataPoolController = useDataPoolController()
+  // const dataPoolController = useDataPoolController()
   return {
-    dataPoolController,
+    // dataPoolController,
   }
 }
 const { Provider: RequestsProvider, createUseContext } = createContext(useRequestsService)
