@@ -1,11 +1,10 @@
 import { useWhyDidYouUpdate } from 'ahooks'
-import { useDatas } from 'datas'
-import { useObservableState } from 'observable-hooks'
 import { FC } from 'react'
+import { useAppSelector } from 'store'
+import { selectCounter } from 'store/data'
 
 const Output: FC = () => {
-  const { props } = useDatas()
-
+  const props = useAppSelector(selectCounter)
   console.log('Output 页面刷新')
   useWhyDidYouUpdate('Output', props)
 
