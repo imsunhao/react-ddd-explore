@@ -14,11 +14,15 @@ export function createPromise<T = void, J = any>() {
 }
 
 export const fetchData = (props: {}) => {
-  console.log('fetchData [req]')
-  const { promise, reslove } = createPromise<boolean>()
+  const id = Date.now()
+  console.log('fetchData [req]', id)
+  const { promise, reslove, reject } = createPromise<number>()
 
   setTimeout(() => {
-    reslove(!!Math.round(Math.random()))
+    const data = Math.round(Math.random())
+    if (!data) return reject(data)
+    reslove(data)
+    console.log('fetchData [res]', id, data)
   }, 1000)
 
   return promise

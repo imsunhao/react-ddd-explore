@@ -1,83 +1,69 @@
 import { useObservableState, useObservable } from 'observable-hooks'
 import * as React from 'react'
-import {
-  map,
-  distinctUntilChanged,
-  switchMap,
-  catchError,
-  startWith,
-  tap
-} from 'rxjs/operators'
-import { of, timer, Observable } from 'rxjs'
+import { map, distinctUntilChanged, switchMap, catchError, startWith, tap, debounceTime } from 'rxjs/operators'
+import { of, timer, Observable, interval, from } from 'rxjs'
+import { useWhyDidYouUpdate } from 'ahooks'
+import { fetchData } from 'utils/promise'
 
-export interface SuggestsItem {
-  href: string
-  title: string
-  content: string
-}
-
-export type SuggestsList = SuggestsItem[]
+export type SuggestsList = boolean
 
 export type SuggestsFetcher = (text: string) => Observable<SuggestsList>
 
 export interface SuggestsProps {
   text: string
-  fetchFunc: SuggestsFetcher
 }
 
-const StateDefault: React.FC = () => null
-
-const StateLoading: React.FC = () => (
-  <div className="notification is-primary has-text-centered">Searching...</div>
-)
-
-const StateFinish: React.FC<{ list: SuggestsList }> = props => (
-  <ul>
-    {props.list!.map(item => (
-      <li className="box" key={item.href}>
-        <strong>
-          <a href={item.href} target="_blank" rel="noopener noreferrer">
-            {item.title}
-          </a>
-        </strong>
-        <p>{item.content}</p>
-      </li>
-    ))}
-  </ul>
-)
-
-const StateError: React.FC = () => (
-  <div className="notification is-danger has-text-centered">
-    Failed fetching...
-  </div>
-)
+const defaultState = {
+  loading: false,
+  data: undefined as any,
+  error: undefined as any,
+}
 
 /** Reusable Suggests Component */
-export const Suggests: React.FC<SuggestsProps> = props => {
+export const Suggests: React.FC<SuggestsProps> = (props) => {
+  const { text } = props
+
+  const data$ = useObservable(
+    (inputs$) => {
+      inputs$.subscribe({
+        next: (x) => console.log('got value ' + x),
+        error: (err) => console.error('something wrong occurred: ' + err),
+        complete: () => console.log('done'),
+      })
+      return inputs$
+    },
+    [text]
+  )
+
   const status$ = useObservable(
-    // A stream of React elements!
-    inputs$ =>
+    (inputs$) =>
       inputs$.pipe(
-        distinctUntilChanged((a, b) => a[0] === b[0]),
-        switchMap(([text, fetchFunc]) =>
+        debounceTime(1000),
+        // distinctUntilChanged((a, b) => a[0] === b[0]),
+        switchMap(([text]) =>
           text
-            ? // delay in sub-stream so that users can see the
-              // searching state quickly. But no actual request
-              // is performed until the delay is hit.
-              timer(750).pipe(
-                tap(() => console.log('>>> really start searching...')),
-                switchMap(() => fetchFunc(text)),
-                map(suggests => <StateFinish list={suggests} />),
-                // handle errors on sub-stream so that main stream stays alive
-                catchError(() => of(<StateError />)),
-                // show loading state immediately
-                startWith(<StateLoading />)
+            ? from(fetchData(text)).pipe(
+                map((suggests) => ({
+                  loading: false,
+                  data: suggests,
+                })),
+                catchError((e) =>
+                  of({
+                    loading: false,
+                    error: e,
+                  })
+                ),
+                startWith({
+                  loading: true,
+                })
               )
-            : // cancel handling response, reset default state
-              of(<StateDefault />)
+            : of(defaultState)
         )
       ),
-    [props.text, props.fetchFunc]
+    [text]
   )
-  return useObservableState(status$, () => <StateDefault />)
+
+  const output = useObservableState(status$, () => defaultState)
+  useWhyDidYouUpdate('Suggests', output)
+  return <div>{JSON.stringify(output)}</div>
 }
