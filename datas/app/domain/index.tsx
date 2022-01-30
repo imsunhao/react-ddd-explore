@@ -1,12 +1,12 @@
 import { FC, useState } from 'react'
-import RequestsProvider from 'datas/requests/domain'
+import RequestsProvider, { useRequests } from 'datas/requests/domain'
 import { createContext } from 'utils/createContext'
-import { useObservable } from 'observable-hooks'
+import { useObservable, useObservableState } from 'observable-hooks'
 import { switchMap, catchError, debounceTime, from, map, of, startWith } from 'rxjs'
 import { fetchData } from 'utils/promise'
 
 const useDatasService = () => {
-  const [text, updateText] = useState('')
+  const { text } = useRequests()
   const status$ = useObservable(
     (inputs$) =>
       inputs$.pipe(
@@ -36,7 +36,12 @@ const useDatasService = () => {
       ),
     [text]
   )
-  return { status$, text, updateText }
+  const props: any = useObservableState(status$, {
+    loading: false,
+  })
+  console.log('useDatasService', props)
+
+  return { props }
 }
 const { Provider: DatasProvider, createUseContext } = createContext(useDatasService)
 export const createUseDataContext = createUseContext

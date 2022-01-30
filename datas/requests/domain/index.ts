@@ -1,11 +1,16 @@
+import { useState } from 'react'
 import { createContext } from 'utils/createContext'
-import { useDataPoolController } from '../application/dataPoolController'
+import { useObservableCallback, useSubscription, pluckCurrentTargetValue } from 'observable-hooks'
 
 const useRequestsService = () => {
-  // const dataPoolController = useDataPoolController()
-  return {
-    // dataPoolController,
-  }
+  const [text, updateText] = useState('')
+
+  const [onChange, textChange$] = useObservableCallback<string, React.FormEvent<HTMLInputElement>>(
+    pluckCurrentTargetValue
+  )
+  useSubscription(textChange$, updateText)
+
+  return { text, onChange }
 }
 const { Provider: RequestsProvider, createUseContext } = createContext(useRequestsService)
 export const useRequests = createUseContext()

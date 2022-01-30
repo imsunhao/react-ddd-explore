@@ -4,10 +4,7 @@ import { useObservableState } from 'observable-hooks'
 import { FC } from 'react'
 
 const Output: FC = () => {
-  const { status$ } = useDatas()
-  const props: any = useObservableState(status$, {
-    loading: false,
-  })
+  const { props } = useDatas()
 
   console.log('Output 页面刷新')
   useWhyDidYouUpdate('Output', props)
