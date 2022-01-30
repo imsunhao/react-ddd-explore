@@ -1,36 +1,42 @@
 import { FC, useState } from 'react'
-import RequestsProvider, { useRequests } from 'datas/requests/domain'
+import RequestsProvider from 'datas/requests/domain'
 import { createContext } from 'utils/createContext'
-import { useObservable, useObservableState, useSubscription } from 'observable-hooks'
-import { switchMap, timer, mapTo, empty } from 'rxjs'
+import { useObservable } from 'observable-hooks'
+import { switchMap, catchError, debounceTime, from, map, of, startWith } from 'rxjs'
 import { fetchData } from 'utils/promise'
 
-const sendBeacon = (beacon: string) => fetchData(beacon)
-const props = {
-  beacon: {
-    a: '12345',
-  },
-}
-
 const useDatasService = () => {
-  const [shouldSendBeacon, setShouldSendBeacon] = useState(false)
-
-  const beacon$ = useObservable(
+  const [text, updateText] = useState('')
+  const status$ = useObservable(
     (inputs$) =>
       inputs$.pipe(
-        // auto-cancelation
-        switchMap(([shouldSendBeacon, beacon]) => (shouldSendBeacon ? timer(1000).pipe(mapTo(beacon)) : empty()))
+        debounceTime(1000),
+        // distinctUntilChanged((a, b) => a[0] === b[0]),
+        switchMap(([text]) =>
+          text
+            ? from(fetchData(text)).pipe(
+                map((suggests) => ({
+                  loading: false,
+                  data: suggests,
+                })),
+                catchError((e) =>
+                  of({
+                    loading: false,
+                    error: e,
+                  })
+                ),
+                startWith({
+                  loading: true,
+                })
+              )
+            : of({
+                loading: false,
+              })
+        )
       ),
-    [shouldSendBeacon, props.beacon.a]
+    [text]
   )
-
-  useSubscription(beacon$, sendBeacon)
-
-  return {
-    shouldSendBeacon,
-    setShouldSendBeacon,
-    beacon$,
-  }
+  return { status$, text, updateText }
 }
 const { Provider: DatasProvider, createUseContext } = createContext(useDatasService)
 export const createUseDataContext = createUseContext

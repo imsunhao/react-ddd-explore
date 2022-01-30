@@ -1,17 +1,24 @@
+import { useWhyDidYouUpdate } from 'ahooks'
+// import { useDeepState } from 'app/hooks/useDeepState'
+import { useDatas } from 'datas'
+import { useObservableState } from 'observable-hooks'
 import * as React from 'react'
 import { CustomInput } from './custom-input'
-import { InputTimeAgo } from './input-time-ago'
-import { Suggests } from './Suggests'
+import Output from './output'
 
 function App() {
-  const [text, updateText] = React.useState('')
+  const { status$ } = useDatas()
+  const output: any = useObservableState(status$, {
+    loading: false,
+  })
+  // const data = useDeepState(output.data)
+  useWhyDidYouUpdate('App', output)
 
   return (
     <section style={{ margin: 20 }}>
       <div className="container">
-        <CustomInput text={text} onChange={updateText} />
-        <InputTimeAgo text={text} />
-        <Suggests text={text} />
+        <CustomInput />
+        <Output value={output} />
       </div>
     </section>
   )
