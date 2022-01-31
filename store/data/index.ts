@@ -1,5 +1,5 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
-import { useCallback, useRef, useState } from 'react'
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { useCallback, useRef } from 'react'
 
 import { AppState, useAppDispatch } from 'store'
 
@@ -7,19 +7,25 @@ export interface CounterState {
   data: any
   error: any
   loading: boolean
+  status: string
 }
 
 const initialState: CounterState = {
   data: undefined,
   error: undefined,
   loading: false,
+  status: 'init',
 }
 
 export const slice = createSlice({
   name: 'counter',
   initialState,
   // The `reducers` field lets us define reducers and generate associated actions
-  reducers: {},
+  reducers: {
+    setStatus(state, action: PayloadAction<string>) {
+      state.status = action.payload
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchDataAsync.pending, (state, action) => {
@@ -36,7 +42,7 @@ export const slice = createSlice({
   },
 })
 
-// export const { setState } = slice.actions
+export const { setStatus } = slice.actions
 export const fetchDataAsync = createAsyncThunk('counter/fetchData', (args, { rejectWithValue, requestId, signal }) => {
   console.log('fetchData [req]', requestId)
   return fetch(`/api/data?requestId=${requestId}`, {
@@ -54,6 +60,7 @@ export const useFetchDataPolling = () => {
   const abortFnRef = useRef<() => void>()
   const timerRef = useRef<ReturnType<typeof setTimeout>>()
   const run = useCallback(() => {
+    dispatch(setStatus('polling'))
     const fn = () => {
       const promise = dispatch(fetchDataAsync())
       abortFnRef.current = () => promise.abort()
@@ -67,9 +74,10 @@ export const useFetchDataPolling = () => {
   }, [dispatch])
 
   const stop = useCallback(() => {
+    dispatch(setStatus('ready'))
     if (abortFnRef.current) abortFnRef.current()
     clearTimeout(timerRef.current)
-  }, [])
+  }, [dispatch])
 
   return {
     run,
