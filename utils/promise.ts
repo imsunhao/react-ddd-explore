@@ -20,7 +20,7 @@ export const fetchData = (props: {}) => {
 
   setTimeout(() => {
     const data = Math.round(Math.random())
-    if (!data) return reject(data)
+    if (!data) return reject(data || 'test - error')
     reslove(data)
     console.log('fetchData [res]', id, data)
   }, 1000)
