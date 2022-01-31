@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
+import { useCallback, useRef, useState } from 'react'
 
-import type { AppState } from 'store'
+import { AppState, useAppDispatch } from 'store'
 import { createPromise } from 'utils/promise'
 
 export interface CounterState {
@@ -54,6 +55,26 @@ export const fetchDataAsync = createAsyncThunk('counter/fetchData', (args, { rej
 
   return promise
 })
+
+export const useFetchDataPolling = () => {
+  const dispatch = useAppDispatch()
+  const timerRef = useRef<ReturnType<typeof setTimeout>>()
+  const run = useCallback(() => {
+    const fn = () =>
+      dispatch(fetchDataAsync()).then(() => {
+        timerRef.current = setTimeout(() => fn(), 1000)
+      })
+    fn()
+  }, [dispatch])
+  const stop = useCallback(() => {
+    clearTimeout(timerRef.current)
+  }, [])
+
+  return {
+    run,
+    stop,
+  }
+}
 
 export const selectCounter = (state: AppState) => state.counter
 
