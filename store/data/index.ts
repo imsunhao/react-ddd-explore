@@ -2,7 +2,6 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import { useCallback, useRef, useState } from 'react'
 
 import { AppState, useAppDispatch } from 'store'
-import { createPromise } from 'utils/promise'
 
 export interface CounterState {
   data: any
@@ -24,16 +23,13 @@ export const slice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchDataAsync.pending, (state, action) => {
-        console.log('on fetchData pending', action.meta.requestId)
         state.loading = true
       })
       .addCase(fetchDataAsync.fulfilled, (state, action) => {
-        console.log('on fetchData fulfilled', action.meta.requestId)
         state.loading = false
         state.data = action.payload
       })
       .addCase(fetchDataAsync.rejected, (state, action) => {
-        console.log('on fetchData rejected', action)
         state.loading = false
         state.error = action.payload || action.error
       })
@@ -41,32 +37,37 @@ export const slice = createSlice({
 })
 
 // export const { setState } = slice.actions
-export const fetchDataAsync = createAsyncThunk('counter/fetchData', (args, { rejectWithValue }) => {
-  const id = Date.now()
-  console.log('fetchData [req]', id)
-  const { promise, reslove, reject } = createPromise<number>()
-
-  setTimeout(() => {
-    const data = Math.round(Math.random())
-    if (!data) return reject(rejectWithValue(data || { data: 'test - error' }))
-    reslove(data)
-    console.log('fetchData [res]', id, data)
-  }, 1000)
-
-  return promise
+export const fetchDataAsync = createAsyncThunk('counter/fetchData', (args, { rejectWithValue, requestId, signal }) => {
+  console.log('fetchData [req]', requestId)
+  return fetch(`/api/data?requestId=${requestId}`, {
+    signal,
+  }).then((d) =>
+    d.json().then((data) => {
+      if (d.status === 200) return Promise.resolve(data)
+      return Promise.reject(rejectWithValue(data))
+    })
+  )
 })
 
 export const useFetchDataPolling = () => {
   const dispatch = useAppDispatch()
+  const abortFnRef = useRef<() => void>()
   const timerRef = useRef<ReturnType<typeof setTimeout>>()
   const run = useCallback(() => {
-    const fn = () =>
-      dispatch(fetchDataAsync()).then(() => {
+    const fn = () => {
+      const promise = dispatch(fetchDataAsync())
+      abortFnRef.current = () => promise.abort()
+      return promise.then((action: any) => {
+        if (action.error?.name === 'AbortError') return
         timerRef.current = setTimeout(() => fn(), 1000)
       })
+    }
+
     fn()
   }, [dispatch])
+
   const stop = useCallback(() => {
+    if (abortFnRef.current) abortFnRef.current()
     clearTimeout(timerRef.current)
   }, [])
 
