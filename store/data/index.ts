@@ -1,7 +1,8 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { useLatest } from 'app/hooks/useLatest'
 import { useCallback, useRef } from 'react'
 
-import { AppState, useAppDispatch } from 'store'
+import { AppState, useAppDispatch, useAppSelector } from 'store'
 
 export interface CounterState {
   data: any
@@ -10,11 +11,18 @@ export interface CounterState {
   status: string
 }
 
+enum REQUEST_STATUS {
+  init = 'init',
+  ready = 'ready',
+  polling = 'polling',
+  single = 'single',
+}
+
 const initialState: CounterState = {
   data: undefined,
   error: undefined,
   loading: false,
-  status: 'init',
+  status: REQUEST_STATUS.init,
 }
 
 export const slice = createSlice({
@@ -55,12 +63,22 @@ export const fetchDataAsync = createAsyncThunk('counter/fetchData', (args, { rej
   )
 })
 
+export const selectCounter = (state: AppState) => state.counter
+export const selectStatus = (state: AppState) => state.counter.status
+
+export default slice.reducer
+
 export const useFetchDataPolling = () => {
+  const status = useAppSelector(selectStatus)
   const dispatch = useAppDispatch()
   const abortFnRef = useRef<() => void>()
+  const statusRef = useLatest(status)
   const timerRef = useRef<ReturnType<typeof setTimeout>>()
   const run = useCallback(() => {
-    dispatch(setStatus('polling'))
+    const status = statusRef.current
+    if (status !== REQUEST_STATUS.ready) return
+
+    dispatch(setStatus(REQUEST_STATUS.polling))
     const fn = () => {
       const promise = dispatch(fetchDataAsync())
       abortFnRef.current = () => promise.abort()
@@ -71,12 +89,17 @@ export const useFetchDataPolling = () => {
     }
 
     fn()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch])
 
   const stop = useCallback(() => {
-    dispatch(setStatus('ready'))
+    const status = statusRef.current
+    if (status === REQUEST_STATUS.init) return
+
+    dispatch(setStatus(REQUEST_STATUS.ready))
     if (abortFnRef.current) abortFnRef.current()
     clearTimeout(timerRef.current)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch])
 
   return {
@@ -84,7 +107,3 @@ export const useFetchDataPolling = () => {
     stop,
   }
 }
-
-export const selectCounter = (state: AppState) => state.counter
-
-export default slice.reducer
