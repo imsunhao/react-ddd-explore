@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { useLatest } from 'app/hooks/useLatest'
+import { useObjectMemo } from 'app/hooks/useValues'
 import { useCallback, useRef } from 'react'
 
 import { AppState, useAppDispatch, useAppSelector } from 'store'
@@ -120,11 +121,14 @@ const usePolling = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  return {
+  const returnValue = useObjectMemo({
     run,
     stop,
     restart,
-  }
+  })
+
+  // useWhyDidYouUpdate('usePolling', returnValue)
+  return returnValue
 }
 
 const useSingle = () => {
@@ -162,17 +166,23 @@ const useSingle = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch])
 
-  return {
+
+  const returnValue = useObjectMemo({
     run,
     stop,
-  }
+  })
+
+  // useWhyDidYouUpdate('useSingle', returnValue)
+  return returnValue
 }
 
 export const useRequestController = () => {
   const polling = usePolling()
   const single = useSingle()
-  return {
+  const returnValue = useObjectMemo({
     polling,
     single,
-  }
+  })
+  // useWhyDidYouUpdate('useRequestController', returnValue)
+  return returnValue
 }
