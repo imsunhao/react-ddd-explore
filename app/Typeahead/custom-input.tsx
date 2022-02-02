@@ -14,7 +14,7 @@ export const CustomInput: React.FC = () => {
           <button
             onClick={() =>
               single
-                .run({})
+                .run({ a: 1234 })
                 .then((data) => {
                   console.log('success', data)
                 })
@@ -31,7 +31,7 @@ export const CustomInput: React.FC = () => {
       <div>
         <p>polling</p>
         <p>
-          <button onClick={() => polling.run({})}>run</button>
+          <button onClick={() => polling.run({ a: 6666 })}>run</button>
           <button onClick={() => polling.stop()}>stop</button>
         </p>
       </div>
